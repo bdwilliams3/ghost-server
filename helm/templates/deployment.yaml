@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server
+  namespace: security
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+    spec:
+      serviceAccountName: mcp-agent
+      containers:
+        - name: mcp-server
+          image: ghost-mcp-server:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
