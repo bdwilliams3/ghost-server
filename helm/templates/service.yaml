@@ -6,6 +6,8 @@ metadata:
 spec:
   selector:
     app: mcp-server
+  type: NodePort
   ports:
     - port: 8000
       targetPort: 8000
+      nodePort: 30000
