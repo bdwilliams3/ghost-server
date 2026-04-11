@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mcp-server
-  namespace: security
+  namespace: workload
 spec:
   selector:
     app: mcp-server
