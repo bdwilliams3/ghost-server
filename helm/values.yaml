@@ -1,0 +1,6 @@
+mcpServer:
+  image: mcp-server:latest
+
+ghostAgent:
+  image: ghost-agent:latest
+  geminiApiKey: ""

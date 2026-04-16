@@ -14,7 +14,12 @@ import (
 	"google.golang.org/genai"
 )
 
-const mcpURL = "http://localhost:8000/mcp"
+var mcpURL = func() string {
+	if u := os.Getenv("MCP_SERVER_URL"); u != "" {
+		return u
+	}
+	return "http://mcp-server.workload.svc.cluster.local:8000/mcp"
+}()
 
 type mcpReq struct {
 	JSONRPC string         `json:"jsonrpc"`

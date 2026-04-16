@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghost-agent
+  namespace: workload
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ghost-agent
+  template:
+    metadata:
+      labels:
+        app: ghost-agent
+    spec:
+      serviceAccountName: mcp-agent
+      containers:
+        - name: ghost-agent
+          image: {{ .Values.ghostAgent.image }}
+          imagePullPolicy: Never
+          stdin: true
+          tty: true
+          env:
+            - name: MCP_SERVER_URL
+              value: "http://mcp-server.workload.svc.cluster.local:8000/mcp"
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ghost-agent-secrets
+                  key: GEMINI_API_KEY

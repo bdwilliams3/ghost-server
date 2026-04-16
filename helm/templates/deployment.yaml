@@ -16,7 +16,7 @@ spec:
       serviceAccountName: mcp-agent
       containers:
         - name: mcp-server
-          image: ghost-mcp-server:latest
+          image: {{ .Values.mcpServer.image }}
           imagePullPolicy: Never
           ports:
             - containerPort: 8000

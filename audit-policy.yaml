@@ -1,0 +1,98 @@
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  # ── High-value AI threat signals ─────────────────────────────────────────
+
+  # Pod exec into any pod — critical for detecting agent/MCP abuse
+  - level: RequestResponse
+    verbs: ["create"]
+    resources:
+      - group: ""
+        resources: ["pods/exec", "pods/attach"]
+
+  # Pod log reads — could indicate recon of AI workloads
+  - level: Metadata
+    verbs: ["get"]
+    resources:
+      - group: ""
+        resources: ["pods/log"]
+
+  # Secret access — API keys, tokens
+  - level: Metadata
+    verbs: ["get", "list", "watch"]
+    resources:
+      - group: ""
+        resources: ["secrets"]
+
+  # ServiceAccount token requests — detect credential harvesting
+  - level: Request
+    resources:
+      - group: "authentication.k8s.io"
+        resources: ["tokenreviews"]
+
+  # RBAC mutations — privilege escalation detection
+  - level: RequestResponse
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: "rbac.authorization.k8s.io"
+        resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
+
+  # All activity in AI / Specter namespaces
+  - level: Request
+    namespaces: ["workload", "specter"]
+
+  # Pod creation/deletion — detect rogue workload spawning
+  - level: RequestResponse
+    verbs: ["create", "delete", "deletecollection"]
+    resources:
+      - group: ""
+        resources: ["pods"]
+
+  # ConfigMap and deployment changes — detect config tampering
+  - level: Metadata
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: ""
+        resources: ["configmaps"]
+      - group: "apps"
+        resources: ["deployments", "daemonsets", "statefulsets"]
+
+  # ── Noise reduction ───────────────────────────────────────────────────────
+
+  # Skip kube-proxy watch noise
+  - level: None
+    users: ["system:kube-proxy"]
+    verbs: ["watch"]
+    resources:
+      - group: ""
+        resources: ["endpoints", "services", "services/status"]
+
+  # Skip node status updates
+  - level: None
+    userGroups: ["system:nodes"]
+    verbs: ["get", "patch", "update"]
+    resources:
+      - group: ""
+        resources: ["nodes", "nodes/status", "pods", "pods/status"]
+
+  # Skip internal controller noise
+  - level: None
+    users:
+      - "system:kube-controller-manager"
+      - "system:kube-scheduler"
+      - "system:serviceaccount:kube-system:endpoint-controller"
+    verbs: ["get", "update", "patch"]
+
+  # Skip health/readiness probes and metrics
+  - level: None
+    nonResourceURLs:
+      - "/healthz*"
+      - "/readyz*"
+      - "/livez*"
+      - "/metrics"
+      - "/version"
+
+  # Default — log metadata for everything else
+  - level: Metadata
+    omitStages:
+      - RequestReceived
